@@ -155,6 +155,12 @@ class CarEnv:
             self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer= 0))
         elif action == 2:
             self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=1*self.STEER_AMT))
+        elif action == 3:
+            self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=0.5*self.STEER_AMT))
+        elif action == 4:
+            self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-0.5*self.STEER_AMT))
+        elif action == 5:
+            self.vehicle.apply_control(carla.VehicleControl(brake=1.0, throttle=0.0, steer=0))
 
         v = self.vehicle.get_velocity()
         kmh = int(3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2))
@@ -197,7 +203,7 @@ class DQNAgent:
         x = base_model.output
         x = GlobalAveragePooling2D()(x)
 
-        predictions = Dense(3, activation="linear")(x)
+        predictions = Dense(6, activation="linear")(x)
         model = Model(inputs=base_model.input, outputs=predictions)
         model.compile(loss="mse", optimizer=Adam(lr=0.001), metrics=["accuracy"])
         return model
@@ -257,7 +263,7 @@ class DQNAgent:
 
     def train_in_loop(self):
         X = np.random.uniform(size=(1, IM_HEIGHT, IM_WIDTH, 3)).astype(np.float32)
-        y = np.random.uniform(size=(1, 3)).astype(np.float32)
+        y = np.random.uniform(size=(1, 6)).astype(np.float32)
         with self.graph.as_default():
             self.model.fit(X,y, verbose=False, batch_size=1)
 
@@ -333,7 +339,7 @@ if __name__ == '__main__':
                     action = np.argmax(agent.get_qs(current_state))
                 else:
                     # Get random action
-                    action = np.random.randint(0, 3)
+                    action = np.random.randint(0, 6)
                     # This takes no time, so we add a delay matching 60 FPS (prediction above takes longer)
                     time.sleep(1/FPS)
 
